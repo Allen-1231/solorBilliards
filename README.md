@@ -22,15 +22,14 @@ js/shaders.js     原模型的行星／地球／雲／大氣／環／太陽著�
 js/game.js        場景、物理、規則、電腦對手、鏡頭與輸入
 server/           線上配對中繼骨架（尚未串接、未測試）
 docs/ONLINE.md    線上對戰設計與缺口
-.github/workflows/pages.yml
 ```
 
 ## 本機執行
 直接用瀏覽器開 `index.html` 即可（需 WebGL2）。若瀏覽器限制本機檔案，改用：`python3 -m http.server 8000` 後開 `http://localhost:8000`。網址加 `#debug` 會開放 `window.__dbg` 供測試。
 
 ## 部署到 GitHub Pages
-1. 把整個資料夾推到 GitHub 儲存庫的 `main`。
-2. Settings → Pages → Source 選「GitHub Actions」（已附 `pages.yml`），或選 Branch: main / root。
+1. 把整個資料夾上傳到 GitHub 儲存庫的 `main`。
+2. Settings → Pages → Source 選 Branch: main / root。
 3. 完成後網址為 `https://<帳號>.github.io/<儲存庫>/`。所有路徑都是相對路徑，子目錄部署可用。
 
 ## 與規格的差異（請看）
