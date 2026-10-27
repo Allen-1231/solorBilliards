@@ -798,9 +798,9 @@
     if (remaining(pl.grp) > 0) return tb.filter(function (b) { return b.grp === pl.grp; });
     return tb.filter(function (b) { return b.n === 8; });
   }
-  function firstLegal(pl, b) {
+  function firstLegal(pl, b, remBefore) {      // remBefore：出桿前自己組別剩幾顆（落袋後再算會誤判打進最後一顆為犯規）
     if (G.open) return b.n !== 8;
-    if (remaining(pl.grp) > 0) return b.grp === pl.grp;
+    if ((remBefore === undefined ? remaining(pl.grp) : remBefore) > 0) return b.grp === pl.grp;
     return b.n === 8;
   }
   function otherGrp(g) { return g === 'A' ? 'B' : 'A'; }
@@ -823,7 +823,7 @@
     pk.forEach(function (b) { if (b.n === 8) eight = b; });
     if (L.cueSunk) foul = '母球落袋';
     else if (!L.first) foul = '沒有擊中任何球';
-    else if (!G.breakShot && !firstLegal(p, L.first)) {
+    else if (!G.breakShot && !firstLegal(p, L.first, L.remBefore[p.grp])) {
       foul = L.first.n === 8 ? '先碰到太陽（8 號球）' : (G.open ? '犯規的第一次碰球' : '先碰到對方組別的球');
     } else if (!pk.length && !L.railAfter) foul = '擊球後沒有球碰到邊界';
 
@@ -1019,13 +1019,13 @@
     var b = document.createElement('b'); b.textContent = d.n; el.appendChild(b);
     return el;
   }
-  var trayEl = {};
+  var trayEl = {}, trayLab = {};
   function buildTray() {
     DEFS.forEach(function (d) { thumbs[d.n] = makeThumb(d); });
     var tray = $('#tray'); tray.innerHTML = '';
     [['a', '類地組 1–7', 'A'], ['e', '8', 'E'], ['b', '類木組 9–15', 'B']].forEach(function (c) {
       var cl = document.createElement('div'); cl.className = 'cl ' + c[0];
-      var lab = document.createElement('span'); lab.textContent = c[1]; cl.appendChild(lab);
+      var lab = document.createElement('span'); lab.textContent = c[1]; lab.dataset.base = c[1]; trayLab[c[2]] = lab; cl.appendChild(lab);
       var row = document.createElement('div'); row.className = 'row'; cl.appendChild(row);
       DEFS.filter(function (d) { return d.grp === c[2]; }).forEach(function (d) { var e = thumbEl(d); trayEl[d.n] = e; row.appendChild(e); });
       tray.appendChild(cl);
@@ -1064,6 +1064,12 @@
       if (G.state === 'placing') st = '放置母球'; else if (G.state === 'aiThink') st = '思考中'; else if (G.state === 'moving' || G.state === 'striking') st = '擊球中'; else if (G.state === 'aiming') st = '瞄準';
       $('#ps' + i).textContent = st;
     });
+    ['A', 'B'].forEach(function (k) {       // 球況列標出每組是誰的球
+      var owner = G.open ? null : G.players.filter(function (p) { return p.grp === k; })[0];
+      trayLab[k].textContent = trayLab[k].dataset.base + (owner ? ' · ' + owner.name : '');
+    });
+    var tgt8 = !G.open && G.players.filter(function (p) { return remaining(p.grp) === 0; })[0];
+    trayLab.E.textContent = tgt8 ? '8 · ' + tgt8.name + ' 的目標' : '8';
     updateTray();
     var humanAim = G.state === 'aiming' && !G.players[G.cur].ai, placing = G.state === 'placing' && !G.players[G.cur].ai;
     $('#power').classList.toggle('off', !(humanAim || placing)); $('#spinbox').classList.toggle('off', !humanAim); $('#bFire').hidden = !placing;
@@ -1605,7 +1611,7 @@
       G.state = 'menu';
       requestAnimationFrame(frame);
       if (DBG) {
-        window.__dbg = { setSpin: setSpin, planetFx: planetFx, byN: byN, AUD: AUD, G: G, balls: balls, cue: cue, tick: tick, newGame: newGame, fireShot: fireShot, advance: function (s) { var n = Math.round(s * 60); for (var i = 0; i < n; i++) { tick(1 / 60); updateCamera(1 / 60); } }, aiChoose: aiChoose, aiPlan: aiPlan, CAM: CAM, cam: cam, project: project, pickPlane: pickPlane, resolveShot: resolveShot, hideMenu: hideMenu, eng: eng, setPower: setPower, computeAim: computeAim, focusShot: focusShot, fitDistance: fitDistance, ballPx: ballPx };
+        window.__dbg = { renderHUD: renderHUD, setSpin: setSpin, planetFx: planetFx, byN: byN, AUD: AUD, G: G, balls: balls, cue: cue, tick: tick, newGame: newGame, fireShot: fireShot, advance: function (s) { var n = Math.round(s * 60); for (var i = 0; i < n; i++) { tick(1 / 60); updateCamera(1 / 60); } }, aiChoose: aiChoose, aiPlan: aiPlan, CAM: CAM, cam: cam, project: project, pickPlane: pickPlane, resolveShot: resolveShot, hideMenu: hideMenu, eng: eng, setPower: setPower, computeAim: computeAim, focusShot: focusShot, fitDistance: fitDistance, ballPx: ballPx };
       }
     } catch (err) {
       msgEl.textContent = '初始化失敗：' + (err && err.message);
