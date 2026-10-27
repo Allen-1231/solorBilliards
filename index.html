@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>太陽系撞球</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage"><canvas id="scene" aria-label="太空撞球檯：以天體當作撞球"></canvas></div>
+<div id="badges" aria-hidden="true"></div>
+<div id="tip"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<header id="top">
+  <section class="pl on" id="pl0" aria-label="玩家一">
+    <div class="pl-name"><b id="pn0">玩家 1</b><span class="st" id="ps0">出手中</span></div>
+    <div class="pl-grp" id="pg0">未分組</div>
+    <div class="pl-left" id="pr0"></div>
+  </section>
+  <div class="tray" id="tray" aria-label="球況"></div>
+  <section class="pl right" id="pl1" aria-label="玩家二">
+    <div class="pl-name"><b id="pn1">玩家 2</b><span class="st" id="ps1">出手中</span></div>
+    <div class="pl-grp" id="pg1">未分組</div>
+    <div class="pl-left" id="pr1"></div>
+  </section>
+</header>
+
+<aside class="side" id="lside" aria-label="力道">
+  <div class="power off" id="power">
+    <span class="plabel">力道</span>
+    <div class="track" id="track" role="slider" aria-orientation="vertical" aria-label="擊球力道" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+      <div class="fill" id="fill"></div><div class="thumb" id="thumb"></div><span class="hint" id="phint">抓住圓鈕往下拉，放開擊球</span>
+    </div>
+    <output id="pval" for="track">0%</output>
+  </div>
+</aside>
+<aside class="side" id="rside" aria-label="加塞與擊球">
+  <div class="spinbox off" id="spinbox">
+    <span class="plabel">加塞</span>
+    <div class="spin" id="spin" role="application" aria-label="加塞位置，拖曳白點；雙擊歸零" tabindex="0"><i class="cross"></i><i class="dot" id="spinDot"></i></div>
+  </div>
+  <button type="button" id="bFire" class="primary" hidden>放置母球</button>
+</aside>
+
+<footer id="bot">
+  <div class="tools">
+    <button type="button" id="bFit">全景</button>
+    <button type="button" id="bFull">全螢幕</button>
+    <button type="button" id="bAuto" aria-pressed="false" title="瞄準時自動拉近到母球與目標之間">近景跟隨</button>
+    <button type="button" id="bName" aria-pressed="false">名稱</button>
+    <button type="button" id="bSnd" aria-pressed="true">音效</button>
+    <button type="button" id="bHelp">主選單</button>
+    <button type="button" id="bRestart" class="action">重新開始</button>
+  </div>
+</footer>
+
+<div class="overlay" id="menu">
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="eyebrow">Solar Billiards</div>
+    <h1 id="mTitle">太陽系撞球</h1>
+    <p class="lead">十五顆天體就是十五顆球，母球是一顆白色彗星，袋口是黑洞，場地就是太空本身。</p>
+    <div class="legend">
+      <div class="lg a"><h3>類地組 <small>1–7 號</small></h3><div class="row" id="lgA"></div><p>水星、金星、地球、火星，加上月球、木衛一、木衛二。</p></div>
+      <div class="lg e"><h3>太陽 <small>8 號黑球</small></h3><div class="row" id="lgE"></div><p>最後才能打進的黑球。</p></div>
+      <div class="lg b"><h3>類木組 <small>9–15 號</small></h3><div class="row" id="lgB"></div><p>木星、土星、天王星、海王星，加上冥王星、木衛三、木衛四。</p></div>
+    </div>
+    <ol class="rules">
+      <li><b>開球後第一顆合法進袋的球</b>決定你的組別，之後只能先碰自己組別的球。進球就可以繼續擊球。</li>
+      <li>打光自己組別的 7 顆，再打進<b>太陽</b>就獲勝。不必指定袋口。</li>
+      <li><b>犯規</b>（母球落袋、沒碰到任何球、先碰到對方組別或太陽、擊球後沒有球碰邊界）：對手獲得<b>自由球</b>，可把母球放在任何位置。</li>
+      <li>太陽太早落袋，或打太陽時犯規，直接判負。</li>
+      <li><b>瞄準</b>：點擊球檯上的位置來設定方向，瞄準會固定不動；拖曳瞄準光環可微調，←/→ 鍵更細（Shift 更慢）。</li>
+      <li><b>擊球</b>：抓住左側力道條的圓鈕往下拉，放開就擊球；也可以按住空白鍵蓄力、放開擊球。右側圓盤可加塞。</li>
+      <li><b>鏡頭</b>：預設完整俯瞰整張球檯。拖曳空白處旋轉，滾輪或雙指縮放，右鍵拖曳平移；按「全景」隨時復位。「近景跟隨」可選擇瞄準時自動拉近。</li>
+    </ol>
+    <p id="msg">載入天體貼圖…</p>
+    <div class="acts">
+      <button type="button" class="primary" id="mPvp" disabled>雙人對戰</button>
+      <button type="button" id="mAi" disabled>挑戰電腦</button>
+      <button type="button" id="mOnline" disabled>線上配對</button>
+    </div>
+    <p class="note">星球貼圖來自 NASA、Solar System Scope、Planet Pixel Emporium 等。球的大小統一，方便比賽公平。</p>
+  </div>
+</div>
+
+<div class="overlay" id="lobby" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+    <div class="eyebrow">Online</div>
+    <h2 id="lbTitle">線上配對</h2>
+    <p class="lead" id="lbMsg"></p>
+    <div class="acts">
+      <button type="button" class="primary" id="lbAi">改打電腦</button>
+      <button type="button" id="lbBack">返回</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="over" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="oTitle">
+    <div class="eyebrow">Game over</div>
+    <h2 id="oTitle">—</h2>
+    <p class="lead" id="oWhy"></p>
+    <div class="acts">
+      <button type="button" class="primary" id="oAgain">再來一局</button>
+      <button type="button" id="oMenu">回到選單</button>
+    </div>
+  </div>
+</div>
+<script src="js/textures.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/shaders.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
